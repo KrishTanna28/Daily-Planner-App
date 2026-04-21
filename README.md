@@ -72,28 +72,3 @@ npm run start
 npm run typecheck
 npm run test:unit
 ```
-
-## Evaluation Demo Checklist
-
-1. Register a new user with valid values.
-2. Try registering with the same email again and confirm duplicate-email error.
-3. Login with correct credentials and verify Dashboard opens.
-4. Close and reopen app, verify user remains logged in.
-5. Add tasks with valid/invalid due time and verify validation.
-6. Edit a task and confirm updated values persist.
-7. Toggle task status and verify filters (All/Pending/Completed).
-8. Search by title/description and verify live filtering.
-9. Delete a task and verify persistence after restart.
-10. Logout and confirm app returns to Login and does not auto-login after restart.
-
-## Daily Reset Manual Verification
-
-Use either approach:
-
-1. Change device date to next day, relaunch app, and verify tasks are cleared.
-2. Set `@daily-planner/last-reset-date` in storage to a previous day, relaunch, and verify reset notice appears.
-
-## Notes
-
-- This project is local-first and does not require a backend API.
-- Passwords are currently stored in plain text for educational scope; production apps should use secure storage and hashing.
