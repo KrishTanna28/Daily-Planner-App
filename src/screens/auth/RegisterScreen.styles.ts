@@ -5,14 +5,14 @@ import { spacing } from '../../theme/spacing';
 
 export const registerScreenStyles = StyleSheet.create({
   content: {
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     minHeight: '100%',
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
   },
   logoWrap: {
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xl,
   },
   fieldGroup: {
     marginBottom: spacing.lg,
