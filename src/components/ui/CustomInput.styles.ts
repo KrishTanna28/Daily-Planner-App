@@ -17,11 +17,15 @@ export const customInputStyles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     flexDirection: 'row',
     minHeight: 50,
     paddingHorizontal: spacing.md,
+  },
+  inputRowMultiline: {
+    alignItems: 'flex-start',
+    paddingVertical: spacing.sm,
   },
   input: {
     color: colors.textPrimary,
@@ -29,6 +33,9 @@ export const customInputStyles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
+  },
+  multilineInput: {
+    minHeight: 88,
   },
   inputWithError: {
     borderColor: colors.danger,

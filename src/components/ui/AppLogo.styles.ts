@@ -22,7 +22,7 @@ export const appLogoStyles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 22,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: 0,
   },
   subtitle: {
     color: colors.textSecondary,

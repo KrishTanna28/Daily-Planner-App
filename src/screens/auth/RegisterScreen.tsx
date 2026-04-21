@@ -1,12 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
+import { AppLogo } from '../../components/ui/AppLogo';
 import { CustomButton } from '../../components/ui/CustomButton';
 import { CustomInput } from '../../components/ui/CustomInput';
+import { Snackbar } from '../../components/ui/Snackbar';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { registerUserThunk } from '../../redux/slices/authSlice';
+import { colors } from '../../theme/colors';
 import { AuthStackParamList } from '../../types';
 import {
   FormErrors,
@@ -17,6 +21,7 @@ import {
 import { registerScreenStyles as styles } from './RegisterScreen.styles';
 
 type RegisterScreenProps = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+type RegisterTouchedFields = Partial<Record<keyof RegisterFormValues, boolean>>;
 
 const initialFormValues: RegisterFormValues = {
   fullName: '',
@@ -29,8 +34,31 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const [formValues, setFormValues] = useState<RegisterFormValues>(initialFormValues);
-  const [errors, setErrors] = useState<FormErrors<RegisterFormValues>>({});
+  const [touchedFields, setTouchedFields] = useState<RegisterTouchedFields>({});
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [isSuccessVisible, setIsSuccessVisible] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const validationErrors = validateRegisterForm(formValues);
+  const isFormValid = !hasValidationErrors(validationErrors);
+  const visibleErrors: FormErrors<RegisterFormValues> = {
+    fullName: touchedFields.fullName || wasSubmitted ? validationErrors.fullName : undefined,
+    email: touchedFields.email || wasSubmitted ? validationErrors.email : undefined,
+    password: touchedFields.password || wasSubmitted ? validationErrors.password : undefined,
+    confirmPassword:
+      touchedFields.confirmPassword || wasSubmitted ? validationErrors.confirmPassword : undefined,
+  };
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
 
   const updateField = (field: keyof RegisterFormValues, value: string) => {
     setFormValues((previousState) => ({
@@ -38,17 +66,16 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       [field]: value,
     }));
 
-    setErrors((previousState) => ({
+    setTouchedFields((previousState) => ({
       ...previousState,
-      [field]: undefined,
+      [field]: true,
     }));
 
     setSubmitError(null);
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validateRegisterForm(formValues);
-    setErrors(validationErrors);
+    setWasSubmitted(true);
 
     if (hasValidationErrors(validationErrors)) {
       return;
@@ -63,7 +90,10 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
         }),
       ).unwrap();
 
-      navigation.replace('Login');
+      setIsSuccessVisible(true);
+      successTimerRef.current = setTimeout(() => {
+        navigation.replace('Login');
+      }, 900);
     } catch (error) {
       setSubmitError(typeof error === 'string' ? error : 'Unable to register right now.');
     }
@@ -71,16 +101,22 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
 
   return (
     <ScreenContainer>
-      <View style={styles.content}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Register once and plan your tasks every day.</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.logoWrap}>
+          <AppLogo subtitle="Create an account and start planning." />
+        </View>
 
         <View style={styles.fieldGroup}>
           <CustomInput
             autoCapitalize="words"
             autoCorrect={false}
-            errorText={errors.fullName}
+            errorText={visibleErrors.fullName}
             label="Full Name"
+            leftIcon={<Ionicons color={colors.textSecondary} name="person-outline" size={20} />}
             onChangeText={(value) => updateField('fullName', value)}
             placeholder="Your full name"
             value={formValues.fullName}
@@ -91,9 +127,10 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           <CustomInput
             autoCapitalize="none"
             autoCorrect={false}
-            errorText={errors.email}
+            errorText={visibleErrors.email}
             keyboardType="email-address"
             label="Email"
+            leftIcon={<Ionicons color={colors.textSecondary} name="mail-outline" size={20} />}
             onChangeText={(value) => updateField('email', value)}
             placeholder="you@example.com"
             value={formValues.email}
@@ -104,11 +141,26 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           <CustomInput
             autoCapitalize="none"
             autoCorrect={false}
-            errorText={errors.password}
+            errorText={visibleErrors.password}
             label="Password"
+            leftIcon={<Ionicons color={colors.textSecondary} name="lock-closed-outline" size={20} />}
             onChangeText={(value) => updateField('password', value)}
             placeholder="Minimum 6 characters"
-            secureTextEntry
+            rightAccessory={
+              <Pressable
+                accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => setIsPasswordVisible((previousValue) => !previousValue)}
+              >
+                <Ionicons
+                  color={colors.textSecondary}
+                  name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                />
+              </Pressable>
+            }
+            secureTextEntry={!isPasswordVisible}
             value={formValues.password}
           />
         </View>
@@ -117,11 +169,26 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           <CustomInput
             autoCapitalize="none"
             autoCorrect={false}
-            errorText={errors.confirmPassword}
+            errorText={visibleErrors.confirmPassword}
             label="Confirm Password"
+            leftIcon={<Ionicons color={colors.textSecondary} name="shield-checkmark-outline" size={20} />}
             onChangeText={(value) => updateField('confirmPassword', value)}
             placeholder="Re-enter password"
-            secureTextEntry
+            rightAccessory={
+              <Pressable
+                accessibilityLabel={isConfirmPasswordVisible ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => setIsConfirmPasswordVisible((previousValue) => !previousValue)}
+              >
+                <Ionicons
+                  color={colors.textSecondary}
+                  name={isConfirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                />
+              </Pressable>
+            }
+            secureTextEntry={!isConfirmPasswordVisible}
             value={formValues.confirmPassword}
           />
         </View>
@@ -129,15 +196,22 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
         {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
 
         <View style={styles.buttonGroup}>
-          <CustomButton loading={isLoading} onPress={handleSubmit} title="Register" />
+          <CustomButton
+            disabled={!isFormValid || isSuccessVisible}
+            loading={isLoading}
+            onPress={handleSubmit}
+            title="Register"
+          />
         </View>
 
         <View style={styles.helperRow}>
           <Pressable style={styles.linkButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.linkText}>Back to login</Text>
+            <Text style={styles.helperText}>Already have an account? <Text style={styles.linkText}>Login</Text></Text>
           </Pressable>
         </View>
-      </View>
+
+      </ScrollView>
+      <Snackbar message="Registration successful. Please login." visible={isSuccessVisible} />
     </ScreenContainer>
   );
 }

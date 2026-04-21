@@ -6,13 +6,14 @@ import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { CustomButton } from '../../components/ui/CustomButton';
 import { TaskForm } from '../../components/ui/TaskForm';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { loadTasksThunk, updateTaskThunk } from '../../redux/slices/tasksSlice';
+import { deleteTaskThunk, loadTasksThunk, updateTaskThunk } from '../../redux/slices/tasksSlice';
 import { colors } from '../../theme/colors';
 import { AppStackParamList } from '../../types';
 import { FormErrors, TaskFormValues, hasValidationErrors, validateTaskForm } from '../../utils/validation';
 import { taskEditorScreenStyles as styles } from './TaskEditorScreen.styles';
 
 type EditTaskScreenProps = NativeStackScreenProps<AppStackParamList, 'EditTask'>;
+type TaskTouchedFields = Partial<Record<keyof TaskFormValues, boolean>>;
 
 const emptyTaskFormValues: TaskFormValues = {
   title: '',
@@ -27,9 +28,17 @@ export function EditTaskScreen({ navigation, route }: EditTaskScreenProps) {
     state.tasks.items.find((taskItem) => taskItem.id === route.params.taskId),
   );
   const [values, setValues] = useState<TaskFormValues>(emptyTaskFormValues);
-  const [errors, setErrors] = useState<FormErrors<TaskFormValues>>({});
+  const [touchedFields, setTouchedFields] = useState<TaskTouchedFields>({});
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasRequestedLoad, setHasRequestedLoad] = useState(false);
+  const validationErrors = validateTaskForm(values);
+  const isFormValid = !hasValidationErrors(validationErrors);
+  const visibleErrors: FormErrors<TaskFormValues> = {
+    title: touchedFields.title || wasSubmitted ? validationErrors.title : undefined,
+    description: touchedFields.description || wasSubmitted ? validationErrors.description : undefined,
+    dueTime: touchedFields.dueTime || wasSubmitted ? validationErrors.dueTime : undefined,
+  };
 
   useEffect(() => {
     if (task) {
@@ -51,17 +60,16 @@ export function EditTaskScreen({ navigation, route }: EditTaskScreenProps) {
       [field]: value,
     }));
 
-    setErrors((previousState) => ({
+    setTouchedFields((previousState) => ({
       ...previousState,
-      [field]: undefined,
+      [field]: true,
     }));
 
     setSubmitError(null);
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validateTaskForm(values);
-    setErrors(validationErrors);
+    setWasSubmitted(true);
 
     if (hasValidationErrors(validationErrors)) {
       return;
@@ -83,6 +91,15 @@ export function EditTaskScreen({ navigation, route }: EditTaskScreenProps) {
       navigation.goBack();
     } catch (error) {
       setSubmitError(typeof error === 'string' ? error : 'Unable to update task right now.');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await dispatch(deleteTaskThunk({ taskId: route.params.taskId })).unwrap();
+      navigation.goBack();
+    } catch (error) {
+      setSubmitError(typeof error === 'string' ? error : 'Unable to delete task right now.');
     }
   };
 
@@ -122,14 +139,24 @@ export function EditTaskScreen({ navigation, route }: EditTaskScreenProps) {
         <Text style={styles.subtitle}>Update task details and keep your schedule accurate.</Text>
 
         <TaskForm
-          errors={errors}
+          errors={visibleErrors}
           isLoading={isLoading}
           onChangeField={updateField}
           onSubmit={handleSubmit}
+          submitDisabled={!isFormValid}
           submitError={submitError}
           submitLabel="Update Task"
           values={values}
         />
+
+        <View style={styles.deleteAction}>
+          <CustomButton
+            disabled={isLoading}
+            onPress={handleDelete}
+            title="Delete Task"
+            variant="danger"
+          />
+        </View>
       </View>
     </ScreenContainer>
   );

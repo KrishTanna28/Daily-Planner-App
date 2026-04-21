@@ -25,14 +25,14 @@ export function CustomInput({
   return (
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.inputRow, errorText ? styles.inputWithError : null]}>
+      <View style={[styles.inputRow, rest.multiline ? styles.inputRowMultiline : null, errorText ? styles.inputWithError : null]}>
         {leftIcon ? <View style={styles.iconWrap}>{leftIcon}</View> : null}
         <TextInput
           {...rest}
           placeholderTextColor={colors.textSecondary}
           value={value}
           onChangeText={onChangeText}
-          style={styles.input}
+          style={[styles.input, rest.multiline ? styles.multilineInput : null]}
         />
         {rightAccessory ? <View style={styles.iconWrap}>{rightAccessory}</View> : null}
       </View>

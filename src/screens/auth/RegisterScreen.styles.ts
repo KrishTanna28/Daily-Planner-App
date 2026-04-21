@@ -5,21 +5,14 @@ import { spacing } from '../../theme/spacing';
 
 export const registerScreenStyles = StyleSheet.create({
   content: {
-    flex: 1,
     justifyContent: 'center',
+    minHeight: '100%',
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
   },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: spacing.xl,
+  logoWrap: {
+    marginBottom: spacing.xxl,
   },
   fieldGroup: {
     marginBottom: spacing.lg,
@@ -31,7 +24,12 @@ export const registerScreenStyles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   linkButton: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
+  },
+  helperText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   linkText: {
     color: colors.primary,

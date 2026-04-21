@@ -1,17 +1,21 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
+import { AppLogo } from '../../components/ui/AppLogo';
 import { CustomButton } from '../../components/ui/CustomButton';
 import { CustomInput } from '../../components/ui/CustomInput';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { loginUserThunk } from '../../redux/slices/authSlice';
+import { colors } from '../../theme/colors';
 import { AuthStackParamList } from '../../types';
 import { FormErrors, LoginFormValues, hasValidationErrors, validateLoginForm } from '../../utils/validation';
 import { loginScreenStyles as styles } from './LoginScreen.styles';
 
 type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+type LoginTouchedFields = Partial<Record<keyof LoginFormValues, boolean>>;
 
 const initialFormValues: LoginFormValues = {
   email: '',
@@ -22,8 +26,17 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const [formValues, setFormValues] = useState<LoginFormValues>(initialFormValues);
-  const [errors, setErrors] = useState<FormErrors<LoginFormValues>>({});
+  const [touchedFields, setTouchedFields] = useState<LoginTouchedFields>({});
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const validationErrors = validateLoginForm(formValues);
+  const isFormValid = !hasValidationErrors(validationErrors);
+  const visibleErrors: FormErrors<LoginFormValues> = {
+    email: touchedFields.email || wasSubmitted ? validationErrors.email : undefined,
+    password: touchedFields.password || wasSubmitted ? validationErrors.password : undefined,
+  };
 
   const updateField = (field: keyof LoginFormValues, value: string) => {
     setFormValues((previousState) => ({
@@ -31,17 +44,16 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       [field]: value,
     }));
 
-    setErrors((previousState) => ({
+    setTouchedFields((previousState) => ({
       ...previousState,
-      [field]: undefined,
+      [field]: true,
     }));
 
     setSubmitError(null);
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validateLoginForm(formValues);
-    setErrors(validationErrors);
+    setWasSubmitted(true);
 
     if (hasValidationErrors(validationErrors)) {
       return;
@@ -57,16 +69,18 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   return (
     <ScreenContainer>
       <View style={styles.content}>
-        <Text style={styles.title}>Daily Planner</Text>
-        <Text style={styles.subtitle}>Sign in to manage your day with confidence.</Text>
+        <View style={styles.logoWrap}>
+          <AppLogo subtitle="Sign in to manage your day." />
+        </View>
 
         <View style={styles.fieldGroup}>
           <CustomInput
             autoCapitalize="none"
             autoCorrect={false}
-            errorText={errors.email}
+            errorText={visibleErrors.email}
             keyboardType="email-address"
             label="Email"
+            leftIcon={<Ionicons color={colors.textSecondary} name="mail-outline" size={20} />}
             onChangeText={(value) => updateField('email', value)}
             placeholder="you@example.com"
             value={formValues.email}
@@ -77,11 +91,26 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           <CustomInput
             autoCapitalize="none"
             autoCorrect={false}
-            errorText={errors.password}
+            errorText={visibleErrors.password}
             label="Password"
+            leftIcon={<Ionicons color={colors.textSecondary} name="lock-closed-outline" size={20} />}
             onChangeText={(value) => updateField('password', value)}
             placeholder="Enter your password"
-            secureTextEntry
+            rightAccessory={
+              <Pressable
+                accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => setIsPasswordVisible((previousValue) => !previousValue)}
+              >
+                <Ionicons
+                  color={colors.textSecondary}
+                  name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                />
+              </Pressable>
+            }
+            secureTextEntry={!isPasswordVisible}
             value={formValues.password}
           />
         </View>
@@ -89,12 +118,12 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
 
         <View style={styles.buttonGroup}>
-          <CustomButton loading={isLoading} onPress={handleSubmit} title="Login" />
+          <CustomButton disabled={!isFormValid} loading={isLoading} onPress={handleSubmit} title="Login" />
         </View>
 
         <View style={styles.helperRow}>
           <Pressable style={styles.linkButton} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.linkText}>Create an account</Text>
+            <Text style={styles.helperText}>Don't have an account? <Text style={styles.linkText}>Register</Text></Text>
           </Pressable>
         </View>
       </View>

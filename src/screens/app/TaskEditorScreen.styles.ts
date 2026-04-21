@@ -40,4 +40,7 @@ export const taskEditorScreenStyles = StyleSheet.create({
   fallbackActions: {
     marginTop: spacing.sm,
   },
+  deleteAction: {
+    marginTop: spacing.md,
+  },
 });

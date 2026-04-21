@@ -7,30 +7,47 @@ export const taskCardStyles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: spacing.md,
     padding: spacing.lg,
   },
-  headerRow: {
-    alignItems: 'center',
+  cardPressed: {
+    opacity: 0.86,
+  },
+  topRow: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  checkbox: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: 6,
+    borderWidth: 1,
+    height: 24,
+    justifyContent: 'center',
+    marginTop: 1,
+    width: 24,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  textBlock: {
+    flex: 1,
   },
   title: {
     color: colors.textPrimary,
-    flex: 1,
     fontSize: 16,
     fontWeight: '700',
-    marginRight: spacing.md,
   },
   titleCompleted: {
     color: colors.textSecondary,
     textDecorationLine: 'line-through',
   },
   statusBadge: {
-    borderRadius: 999,
+    borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
@@ -50,21 +67,29 @@ export const taskCardStyles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  metaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+  },
+  dueTimeWrap: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
   dueTime: {
     color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
-    marginBottom: spacing.md,
   },
-  actionRow: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  actionButton: {
-    flex: 1,
-    minWidth: 110,
+  iconButton: {
+    alignItems: 'center',
+    borderRadius: 8,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
   },
 });

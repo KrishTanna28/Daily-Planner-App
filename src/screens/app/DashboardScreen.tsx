@@ -1,17 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useState } from 'react';
 
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { CustomButton } from '../../components/ui/CustomButton';
 import { CustomInput } from '../../components/ui/CustomInput';
-import { NoticeBanner } from '../../components/ui/NoticeBanner';
 import { TaskCard } from '../../components/ui/TaskCard';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { logoutUserThunk } from '../../redux/slices/authSlice';
 import {
   deleteTaskThunk,
-  dismissDailyResetNotice,
   loadTasksThunk,
   selectVisibleTasks,
   setTaskFilter,
@@ -22,7 +22,7 @@ import { colors } from '../../theme/colors';
 import { AppStackParamList, TaskFilter } from '../../types';
 import { dashboardScreenStyles as styles } from './DashboardScreen.styles';
 
-const filterOptions: TaskFilter[] = ['all', 'pending', 'completed'];
+const filterOptions: TaskFilter[] = ['all', 'completed', 'pending'];
 
 const filterLabelMap: Record<TaskFilter, string> = {
   all: 'All',
@@ -35,14 +35,14 @@ type DashboardScreenProps = NativeStackScreenProps<AppStackParamList, 'Dashboard
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
   const dispatch = useAppDispatch();
   const { sessionUser, isLoading: isAuthLoading } = useAppSelector((state) => state.auth);
-  const { activeFilter, didDailyReset, errorMessage, isLoading: isTasksLoading, items, searchQuery } = useAppSelector(
+  const { activeFilter, errorMessage, isLoading: isTasksLoading, items, searchQuery } = useAppSelector(
     (state) => state.tasks,
   );
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const visibleTasks = useAppSelector(selectVisibleTasks);
   const todayDateLabel = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
   });
   const isBusy = isTasksLoading || isAuthLoading;
@@ -59,23 +59,37 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
     dispatch(setTaskFilter(filter));
   };
 
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUserThunk()).unwrap();
+      setIsLogoutModalVisible(false);
+    } catch {
+      setIsLogoutModalVisible(false);
+    }
+  };
+
   return (
     <ScreenContainer>
       <View style={styles.content}>
-        <Text style={styles.title}>Hello, {sessionUser?.fullName ?? 'Planner User'}!</Text>
-        <Text style={styles.date}>{todayDateLabel}</Text>
-
-        {didDailyReset ? (
-          <NoticeBanner
-            dismissLabel="Hide"
-            message="A new day has started. Previous-day tasks were cleared automatically."
-            onDismiss={() => dispatch(dismissDailyResetNotice())}
-          />
-        ) : null}
+        <View style={styles.headerRow}>
+          <View style={styles.headerTextBlock}>
+            <Text style={styles.title}>Hello, {sessionUser?.fullName}!</Text>
+            <Text style={styles.date}>{todayDateLabel}</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Logout"
+            accessibilityRole="button"
+            onPress={() => setIsLogoutModalVisible(true)}
+            style={styles.logoutButton}
+          >
+            <Ionicons color={colors.textPrimary} name="log-out-outline" size={22} />
+          </Pressable>
+        </View>
 
         <View style={styles.searchSection}>
           <CustomInput
             label="Search tasks"
+            leftIcon={<Ionicons color={colors.textSecondary} name="search-outline" size={20} />}
             onChangeText={(value) => dispatch(setTaskSearchQuery(value))}
             placeholder="Search by title or description"
             value={searchQuery}
@@ -111,13 +125,22 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
 
         {!isTasksLoading && items.length === 0 ? (
           <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons color={colors.primary} name="calendar-clear-outline" size={30} />
+            </View>
             <Text style={styles.emptyTitle}>No tasks for today!</Text>
-            <Text style={styles.emptyText}>Tap Add Task to create your first plan for today.</Text>
+            <Text style={styles.emptyText}>Create your first plan and keep the day easy to scan.</Text>
+            <View style={styles.emptyAction}>
+              <CustomButton onPress={() => navigation.navigate('AddTask')} title="Add Task" />
+            </View>
           </View>
         ) : null}
 
         {!isTasksLoading && items.length > 0 && visibleTasks.length === 0 ? (
           <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons color={colors.primary} name="search-outline" size={30} />
+            </View>
             <Text style={styles.emptyTitle}>No matching tasks</Text>
             <Text style={styles.emptyText}>Try changing the search text or active filter.</Text>
           </View>
@@ -128,6 +151,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             contentContainerStyle={styles.listContent}
             data={visibleTasks}
             keyExtractor={(task) => task.id}
+            style={styles.taskList}
             renderItem={({ item }) => (
               <TaskCard
                 isBusy={isBusy}
@@ -147,19 +171,50 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           />
         ) : null}
 
-        <View style={styles.actionRow}>
-          <View style={styles.actionButton}>
-            <CustomButton onPress={() => navigation.navigate('AddTask')} title="Add Task" />
+        <Pressable
+          accessibilityLabel="Add task"
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('AddTask')}
+          style={({ pressed }) => [styles.fab, pressed ? styles.fabPressed : null]}
+        >
+          <Ionicons color={colors.surface} name="add" size={30} />
+        </Pressable>
+
+        <Modal
+          animationType="fade"
+          onRequestClose={() => setIsLogoutModalVisible(false)}
+          transparent
+          visible={isLogoutModalVisible}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalIcon}>
+                <Ionicons color={colors.danger} name="log-out-outline" size={24} />
+              </View>
+              <Text style={styles.modalTitle}>Are you sure you want to logout?</Text>
+              <Text style={styles.modalText}>Your tasks stay saved locally for this account.</Text>
+
+              <View style={styles.modalActions}>
+                <View style={styles.modalButton}>
+                  <CustomButton
+                    disabled={isAuthLoading}
+                    onPress={() => setIsLogoutModalVisible(false)}
+                    title="Cancel"
+                    variant="secondary"
+                  />
+                </View>
+                <View style={styles.modalButton}>
+                  <CustomButton
+                    loading={isAuthLoading}
+                    onPress={handleLogout}
+                    title="Yes"
+                    variant="danger"
+                  />
+                </View>
+              </View>
+            </View>
           </View>
-          <View style={styles.actionButton}>
-            <CustomButton
-              loading={isAuthLoading}
-              onPress={() => dispatch(logoutUserThunk())}
-              title="Logout"
-              variant="danger"
-            />
-          </View>
-        </View>
+        </Modal>
       </View>
     </ScreenContainer>
   );

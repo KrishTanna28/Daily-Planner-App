@@ -11,6 +11,7 @@ import { FormErrors, TaskFormValues, hasValidationErrors, validateTaskForm } fro
 import { taskEditorScreenStyles as styles } from './TaskEditorScreen.styles';
 
 type AddTaskScreenProps = NativeStackScreenProps<AppStackParamList, 'AddTask'>;
+type TaskTouchedFields = Partial<Record<keyof TaskFormValues, boolean>>;
 
 const initialFormValues: TaskFormValues = {
   title: '',
@@ -22,8 +23,16 @@ export function AddTaskScreen({ navigation }: AddTaskScreenProps) {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.tasks.isLoading);
   const [values, setValues] = useState<TaskFormValues>(initialFormValues);
-  const [errors, setErrors] = useState<FormErrors<TaskFormValues>>({});
+  const [touchedFields, setTouchedFields] = useState<TaskTouchedFields>({});
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const validationErrors = validateTaskForm(values);
+  const isFormValid = !hasValidationErrors(validationErrors);
+  const visibleErrors: FormErrors<TaskFormValues> = {
+    title: touchedFields.title || wasSubmitted ? validationErrors.title : undefined,
+    description: touchedFields.description || wasSubmitted ? validationErrors.description : undefined,
+    dueTime: touchedFields.dueTime || wasSubmitted ? validationErrors.dueTime : undefined,
+  };
 
   const updateField = (field: keyof TaskFormValues, value: string) => {
     setValues((previousState) => ({
@@ -31,17 +40,16 @@ export function AddTaskScreen({ navigation }: AddTaskScreenProps) {
       [field]: value,
     }));
 
-    setErrors((previousState) => ({
+    setTouchedFields((previousState) => ({
       ...previousState,
-      [field]: undefined,
+      [field]: true,
     }));
 
     setSubmitError(null);
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validateTaskForm(values);
-    setErrors(validationErrors);
+    setWasSubmitted(true);
 
     if (hasValidationErrors(validationErrors)) {
       return;
@@ -62,10 +70,11 @@ export function AddTaskScreen({ navigation }: AddTaskScreenProps) {
         <Text style={styles.subtitle}>Create a task for today and keep your plan focused.</Text>
 
         <TaskForm
-          errors={errors}
+          errors={visibleErrors}
           isLoading={isLoading}
           onChangeField={updateField}
           onSubmit={handleSubmit}
+          submitDisabled={!isFormValid}
           submitError={submitError}
           submitLabel="Save Task"
           values={values}
