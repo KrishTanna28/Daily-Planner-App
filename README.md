@@ -7,7 +7,7 @@ Daily Planner App is a React Native (Expo + TypeScript) app with local authentic
   <img src="https://github.com/user-attachments/assets/c6edbccc-1912-473a-9726-cc415a356bfd" width="150" />
   <img src="https://github.com/user-attachments/assets/3a98e1de-92e1-4116-8d47-0999e920beb2" width="150" />
   <img src="https://github.com/user-attachments/assets/31f80504-3d72-4cff-97cb-6a5dcb7a52ad" width="150" />
-  <img src="https://github.com/user-attachments/assets/eb151dc7-2d64-4f3f-a14d-2d64-4f3f-a14d-2b70289a7481" width="150" />
+  <img src="https://github.com/user-attachments/assets/d4a23c71-9b9e-400f-b4d1-1bf6e31f9d78" width="150" />
 </p>
 
 ## Tech Stack
