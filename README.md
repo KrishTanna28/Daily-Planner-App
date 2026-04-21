@@ -2,6 +2,12 @@
 
 Daily Planner App is a React Native (Expo + TypeScript) app with local authentication, persistent task management, and Redux state handling.
 
+<img width="781" height="1600" alt="1" src="https://github.com/user-attachments/assets/54c96b6c-6717-4c0f-8b8c-c1a601606b8a" />
+<img width="783" height="1600" alt="2" src="https://github.com/user-attachments/assets/c6edbccc-1912-473a-9726-cc415a356bfd" />
+<img width="777" height="1600" alt="3" src="https://github.com/user-attachments/assets/3a98e1de-92e1-4116-8d47-0999e920beb2" />
+<img width="779" height="1600" alt="4" src="https://github.com/user-attachments/assets/31f80504-3d72-4cff-97cb-6a5dcb7a52ad" />
+<img width="775" height="1600" alt="5" src="https://github.com/user-attachments/assets/eb151dc7-2d64-4f3f-a14d-2b70289a7481" />
+
 ## Tech Stack
 
 - Expo + React Native
