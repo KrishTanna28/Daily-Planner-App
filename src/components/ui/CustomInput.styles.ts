@@ -13,18 +13,29 @@ export const customInputStyles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
-  input: {
+  inputRow: {
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
+    flexDirection: 'row',
+    minHeight: 50,
+    paddingHorizontal: spacing.md,
+  },
+  input: {
     color: colors.textPrimary,
-    fontSize: 16,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    flex: 1,
+    fontSize: 15,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   inputWithError: {
     borderColor: colors.danger,
+  },
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
     color: colors.danger,
